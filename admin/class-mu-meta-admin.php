@@ -40,6 +40,8 @@ class Mu_Meta_Admin {
 	 */
 	private $version;
 
+	private $settings;
+
 	/**
 	 * Initialize the class and set its properties.
 	 *
@@ -73,8 +75,14 @@ class Mu_Meta_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/mu-meta-admin.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style('select2', plugin_dir_url( __FILE__ ) . 'js/select2/dist/css/select2.min.css', array(), '');
+		wp_enqueue_style( 
+			$this->plugin_name, 
+			plugin_dir_url( __FILE__ ) . 'css/mu-meta-admin.css', 
+			array(), 
+			filemtime( (dirname( __FILE__ )) . '/css/mu-meta-admin.css' ), 
+			'all' 
+		);
 	}
 
 	/**
@@ -95,9 +103,92 @@ class Mu_Meta_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/mu-meta-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script(
+			'select2', 
+			plugin_dir_url( __FILE__ ) . 'js/select2/dist/js/select2.js', 
+			array('jquery'),
+			'', 
+			true
+		);
+		wp_enqueue_script(
+			'select2-custom', 
+			plugin_dir_url( __FILE__ ) . 'js/select2-custom.js', 
+			array('jquery', 'select2'), 
+			filemtime( (dirname( __FILE__ )) . '/js/select2-custom.js' ), 
+			true
+		);
+		wp_enqueue_script( 
+			$this->plugin_name, 
+			plugin_dir_url( __FILE__ ) . 'js/mu-meta-admin.js', 
+			array( 'jquery' ),
+			filemtime( (dirname( __FILE__ )) . '/js/mu-meta-admin.js' ), 
+			false );
 
 	}
 
+	public function post_lookup() {
+		Mu_Meta_Post_Selector::post_lookup();
+	}
+	public function post_save() {
+		Mu_Meta_Post_Selector::do_saves();
+	}
+
+	public function demo() {
+		$this->settings = array(
+			array(
+				'slug' => 'related-articles',
+				'title' => '相關文章',
+				'field_name' => 'demo_related_articles',
+				'type' => 'post_selector',
+				'post_post_type' => 'post',
+				'item_post_type' => 'post',
+				'context' => 'normal', // normal, side, advanced
+				'priority' => 'default', // default, high, low 
+			),
+			array(
+				'slug' => 'hala-articles',
+				'title' => '哈拉文章',
+				'field_name' => 'demo_hala_articles',
+				'type' => 'post_selector',
+				'post_post_type' => 'post',
+				'item_post_type' => 'post',
+				'context' => 'side', // normal, side, advanced
+				'priority' => 'default', // default, high, low 
+			)
+		);
+
+		foreach ($this->settings as $set) {
+			if ($set['type'] === 'post_selector') {
+				Mu_Meta_Post_Selector::create( 
+					$set['slug'], 
+					$set['slug'], 
+					$set['field_name'], 
+					$set['title'], 
+					$set['post_post_type'],  
+					$set['item_post_type']
+				);
+			}
+		}
+	}
+	public function demo_add_meta_box() {
+		foreach($this->settings as $set) {
+			if ($set['type'] === 'post_selector') {
+				add_meta_box(
+					$set['slug'], 
+					$set['title'], 
+					array($this, 'display_meta_box'),
+					$set['post_post_type'], 
+					$set['context'],
+					$set['priority'],
+					$set
+				);
+			}
+		}
+	}
+	public function display_meta_box($post, $param) {
+		$set = $param['args'];
+		if ($set['type'] === 'post_selector') {
+			Mu_Meta_Post_Selector::display( $set['slug'] );
+		}
+	}
 }

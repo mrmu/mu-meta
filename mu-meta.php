@@ -13,9 +13,9 @@
  * @package           Mu_Meta
  *
  * @wordpress-plugin
- * Plugin Name:       MuMeta
+ * Plugin Name:       Mu Meta
  * Plugin URI:        http://audilu.com
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+ * Description:       快速搭建 metabox 的工具
  * Version:           1.0.0
  * Author:            Audi Lu
  * Author URI:        http://audilu.com
