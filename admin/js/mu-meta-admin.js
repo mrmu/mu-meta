@@ -1,32 +1,31 @@
 (function( $ ) {
 	'use strict';
 
-	/**
-	 * All of the code for your admin-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
+	$(function(){
+		$( ".mm_datepicker" ).datepicker();
 
+        //Tabs functionality
+        //Firstly hide all content divs
+        $('.generic-tabs div.tab-content').hide();
+        //Then show the first content div
+        $('.generic-tabs div.tab-content:first').show();
+        //Add active class to the first tab link
+        $('.generic-tabs ul.tabs li:first').addClass('active');
+        //Functionality when a tab is clicked
+        $('.generic-tabs ul.tabs li a').on('click', function(){
+        	//Firstly remove the current active class
+            $('.generic-tabs ul.tabs li').removeClass('active');
+            //Apply active class to the parent(li) of the link tag
+            $(this).parent().addClass('active');
+            //Set currentTab to this link
+            var currentTab = $(this).attr('href');
+            //Hide away all tabs
+            $('.generic-tabs div.tab-content').hide();            
+            //show the current tab
+            $(currentTab).show();
+            //Stop default link action from happening
+            return false;
+        });	
+	});
+	
 })( jQuery );

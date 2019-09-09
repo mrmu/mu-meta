@@ -49,10 +49,11 @@ class Mu_Meta_Admin {
 	 * @param      string    $plugin_name       The name of this plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct( $plugin_name, $version, $settings ) {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->settings = $settings;
 
 	}
 
@@ -74,7 +75,8 @@ class Mu_Meta_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
+		wp_register_style('jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css');
+		wp_enqueue_style( 'jquery-ui' );
 		wp_enqueue_style('select2', plugin_dir_url( __FILE__ ) . 'js/select2/dist/css/select2.min.css', array(), '');
 		wp_enqueue_style( 
 			$this->plugin_name, 
@@ -103,6 +105,8 @@ class Mu_Meta_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
+
+		wp_enqueue_script( 'jquery-ui-datepicker' );
 		wp_enqueue_script(
 			'select2', 
 			plugin_dir_url( __FILE__ ) . 'js/select2/dist/js/select2.js', 
@@ -131,64 +135,137 @@ class Mu_Meta_Admin {
 	}
 	public function post_save() {
 		Mu_Meta_Post_Selector::do_saves();
+		Mu_Meta_Text::do_saves();
+		Mu_Meta_WPEditor::do_saves();
 	}
 
 	public function demo() {
-		$this->settings = array(
-			array(
-				'slug' => 'related-articles',
-				'title' => '相關文章',
-				'field_name' => 'demo_related_articles',
-				'type' => 'post_selector',
-				'post_post_type' => 'post',
-				'item_post_type' => 'post',
-				'context' => 'normal', // normal, side, advanced
-				'priority' => 'default', // default, high, low 
-			),
-			array(
-				'slug' => 'hala-articles',
-				'title' => '哈拉文章',
-				'field_name' => 'demo_hala_articles',
-				'type' => 'post_selector',
-				'post_post_type' => 'post',
-				'item_post_type' => 'post',
-				'context' => 'side', // normal, side, advanced
-				'priority' => 'default', // default, high, low 
-			)
-		);
-
-		foreach ($this->settings as $set) {
-			if ($set['type'] === 'post_selector') {
-				Mu_Meta_Post_Selector::create( 
-					$set['slug'], 
-					$set['slug'], 
-					$set['field_name'], 
-					$set['title'], 
-					$set['post_post_type'],  
-					$set['item_post_type']
-				);
+		foreach ($this->settings as $meta_set) {
+			foreach ($meta_set['fields'] as $slug => $fd) {
+				switch ($fd['type']) {
+					case 'post_selector':
+						Mu_Meta_Post_Selector::create( 
+							$slug, 
+							$fd['meta_key'], 
+							$fd['field_name'], 
+							$fd['title'], 
+							$fd['desc'], 
+							$meta_set['post_type'],  
+							$fd['post_type']
+						);
+					break;
+					case 'text':
+						Mu_Meta_Text::create( 
+							$slug, 
+							$fd['meta_key'], 
+							$fd['field_name'], 
+							$fd['title'], 
+							$fd['desc'], 
+							$meta_set['post_type']
+						);
+					break;
+					case 'date':
+						Mu_Meta_Text::create( 
+							$slug, 
+							$fd['meta_key'], 
+							$fd['field_name'], 
+							$fd['title'], 
+							$fd['desc'], 
+							$meta_set['post_type'],
+							'date'
+						);
+					break;
+					case 'editor':
+						Mu_Meta_WPEditor::create( 
+							$slug, 
+							$fd['meta_key'], 
+							$fd['field_name'], 
+							$fd['title'], 
+							$fd['desc'], 
+							$meta_set['post_type']
+						);
+					break;
+				}
 			}
 		}
 	}
 	public function demo_add_meta_box() {
-		foreach($this->settings as $set) {
-			if ($set['type'] === 'post_selector') {
-				add_meta_box(
-					$set['slug'], 
-					$set['title'], 
-					array($this, 'display_meta_box'),
-					$set['post_post_type'], 
-					$set['context'],
-					$set['priority'],
-					$set
-				);
-			}
+		// display each metabox
+		foreach($this->settings as $meta_set) {
+			add_meta_box(
+				$meta_set['meta_slug'], 
+				$meta_set['meta_title'], 
+				array($this, 'display_meta_box'),
+				$meta_set['post_type'], 
+				$meta_set['context'],
+				$meta_set['priority'],
+				$meta_set
+			);
 		}
 	}
 	public function display_meta_box($post, $param) {
-		$set = $param['args'];
-		if ($set['type'] === 'post_selector') {
-			Mu_Meta_Post_Selector::display( $set['slug'] );
+		$meta_set = $param['args'];
+		// display each field of metabox
+		if (!empty($meta_set['render'])) {
+			foreach ($meta_set['render'] as $ren_item) {
+				switch ($meta_set['fields'][$ren_item]['type']) {
+					case 'tabs': 
+					?>
+					<section class="generic-tabs">
+						<ul class="tabs">
+							<?php
+							foreach ($meta_set['fields'][$ren_item]['content'] as $tab_slug => $content) {
+								?>
+								<li>
+									<a title="<?php echo $content['title'];?>" href="#<?php echo $tab_slug;?>"><i class="fa fa-home"></i> <?php echo $content['title'];?></a>
+								</li>
+								<?php
+							}
+							?>
+						</ul>
+						<?php
+							foreach ($meta_set['fields'][$ren_item]['content'] as $tab_slug => $content) {
+								?>
+								<div id="<?php echo $tab_slug;?>" class="tab-content">
+								<?php 
+									foreach ($content['fds'] as $slug) {
+										switch ($meta_set['fields'][$slug]['type']) {
+											case 'post_selector':
+												Mu_Meta_Post_Selector::display( $slug );
+											break;
+											case 'text':
+											case 'date':
+												Mu_Meta_Text::display( $slug );
+											break;
+											case 'editor':
+												Mu_Meta_WPEditor::display( $slug );
+											break;
+										}
+									}
+								?>
+								</div>
+								<?php
+							}
+						?>
+					</section>
+
+					<?php
+					break;
+
+					case 'post_selector':
+						Mu_Meta_Post_Selector::display( $ren_item );
+					break;
+					case 'text':
+					case 'date':
+						Mu_Meta_Text::display( $ren_item );
+					break;
+					case 'editor':
+						Mu_Meta_WPEditor::display( $ren_item );
+					break;
+
+				}
+				echo apply_filters('after_field_'.$ren_item, '');
+			}
 		}
 	}
 }

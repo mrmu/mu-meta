@@ -57,6 +57,8 @@ class Mu_Meta {
 	 */
 	protected $version;
 
+	protected $settings;
+
 	/**
 	 * Define the core functionality of the plugin.
 	 *
@@ -66,14 +68,98 @@ class Mu_Meta {
 	 *
 	 * @since    1.0.0
 	 */
-	public function __construct() {
+	public function __construct($settings) {
 		if ( defined( 'MU_META_VERSION' ) ) {
 			$this->version = MU_META_VERSION;
 		} else {
 			$this->version = '1.0.0';
 		}
 		$this->plugin_name = 'mu-meta';
+		if (!empty($settings)){
+			$this->settings = $settings;
+		}else{
+			$this->settings = array(
+				array(
+					'meta_slug' => 'meta-related-articles',
+					'meta_title' => '相關文章',
+					'post_type' => 'post',
+					'context' => 'normal', // normal, side, advanced
+					'priority' => 'default', // default, high, low 
+					'fields' => array(
+						'fd-ra' => array(
+							'type' => 'post_selector',
+							'meta_key' => 'fd-ra',
+							'title' => 'FD RA',
+							'field_name' => 'fd_name_ra',
+							'desc' => '相關文章選取',
+							'post_type' => 'post',
+						),
+						'fd-hala' => array(
+							'type' => 'post_selector',
+							'meta_key' => 'fd-hala',
+							'title' => 'FD Hala',
+							'field_name' => 'fd_name_hala',
+							'desc' => '哈啦文章選取',
+							'post_type' => 'post',
+						),
+						'fd-myname' => array(
+							'type' => 'text',
+							'meta_key' => 'fd-myname',
+							'title' => 'My Name',
+							'field_name' => 'fd_name_myname',
+							'desc' => '填你的名字',
+						),
+						'fd-mydate' => array(
+							'type' => 'date',
+							'meta_key' => 'fd-mydate',
+							'title' => 'My Date',
+							'field_name' => 'fd_name_mydate',
+							'desc' => '填你的日子',
+						),
+						'fd-content' => array(
+							'type' => 'editor',
+							'meta_key' => 'fd-content',
+							'title' => 'My Content',
+							'field_name' => 'fd_name_content',
+							'desc' => '填你的內容',
+						),
+						'fd-content2' => array(
+							'type' => 'editor',
+							'meta_key' => 'fd-content2',
+							'title' => '通知信模版',
+							'field_name' => 'fd_name_content2',
+							'desc' => '填你的模版內容',
+						),
+						'demo-tab' => array(
+							'type' => 'tabs',
+							'content' => array (
+								'normal' => array(
+									'title' => 'Normal', 
+									'fds' => array('fd-ra', 'fd-myname')
+								), 
+								'notification' => array(
+									'title' => 'DEMO', 
+									'fds' => array('fd-hala', 'fd-mydate', 'fd-content')
+								), 
+							)
+						)
+					),
+					'render' => array(
+						'fd-content2', 'demo-tab'
+					),
+				),
+				array(
+					'meta_slug' => 'meta-hala-articles',
+					'meta_title' => '哈拉文章',
+					'post_type' => 'post',
+					'context' => 'side', // normal, side, advanced
+					'priority' => 'default', // default, high, low 
+					'fields' => array(
 
+					),
+				)
+			);
+		}
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_admin_hooks();
@@ -122,7 +208,12 @@ class Mu_Meta {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-mu-meta-public.php';
 
+		/**
+		 * Form fields
+		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-post-selector.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-text.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-wp-editor.php';
 
 		$this->loader = new Mu_Meta_Loader();
 
@@ -154,7 +245,7 @@ class Mu_Meta {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Mu_Meta_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new Mu_Meta_Admin( $this->get_plugin_name(), $this->get_version(), $this->get_settings() );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -200,6 +291,10 @@ class Mu_Meta {
 	 */
 	public function get_plugin_name() {
 		return $this->plugin_name;
+	}
+
+	public function get_settings() {
+		return $this->settings;
 	}
 
 	/**

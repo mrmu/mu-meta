@@ -73,10 +73,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-mu-meta.php';
  *
  * @since    1.0.0
  */
-function run_mu_meta() {
-
-	$plugin = new Mu_Meta();
-	$plugin->run();
-
+function set_mu_meta($settings) {
+	$mu_meta = new Mu_Meta($settings);
+	$mu_meta->run();
 }
-run_mu_meta();
