@@ -121,6 +121,12 @@ class Mu_Meta_Admin {
 			filemtime( (dirname( __FILE__ )) . '/js/select2-custom.js' ), 
 			true
 		);
+		wp_localize_script( 
+			'select2-custom', 
+			'mumeta',
+			array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) 
+		);
+
 		wp_enqueue_script( 
 			$this->plugin_name, 
 			plugin_dir_url( __FILE__ ) . 'js/mu-meta-admin.js', 
@@ -130,11 +136,15 @@ class Mu_Meta_Admin {
 
 	}
 
+	public function user_lookup() {
+		Mu_Meta_User_Selector::user_lookup();
+	}
 	public function post_lookup() {
 		Mu_Meta_Post_Selector::post_lookup();
 	}
 	public function post_save() {
 		Mu_Meta_Post_Selector::do_saves();
+		Mu_Meta_User_Selector::do_saves();
 		Mu_Meta_Text::do_saves();
 		Mu_Meta_WPEditor::do_saves();
 	}
@@ -152,6 +162,17 @@ class Mu_Meta_Admin {
 							$fd['desc'], 
 							$meta_set['post_type'],  
 							$fd['post_type']
+						);
+					break;
+					case 'user_selector':
+						Mu_Meta_User_Selector::create( 
+							$slug, 
+							$fd['meta_key'], 
+							$fd['field_name'], 
+							$fd['title'], 
+							$fd['desc'], 
+							$meta_set['post_type'],  
+							$fd['role']
 						);
 					break;
 					case 'text':
@@ -230,6 +251,9 @@ class Mu_Meta_Admin {
 								<?php 
 									foreach ($content['fds'] as $slug) {
 										switch ($meta_set['fields'][$slug]['type']) {
+											case 'user_selector':
+												Mu_Meta_User_Selector::display( $slug );
+											break;
 											case 'post_selector':
 												Mu_Meta_Post_Selector::display( $slug );
 											break;
@@ -252,6 +276,9 @@ class Mu_Meta_Admin {
 					<?php
 					break;
 
+					case 'user_selector':
+						Mu_Meta_User_Selector::display( $ren_item );
+					break;
 					case 'post_selector':
 						Mu_Meta_Post_Selector::display( $ren_item );
 					break;

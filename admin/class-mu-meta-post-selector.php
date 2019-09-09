@@ -90,7 +90,7 @@ class Mu_Meta_Post_Selector {
 	public static function post_lookup() {
 	    global $wpdb;
 	    $result = array();
-	    $search = like_escape($_REQUEST['q']);
+	    $search = esc_attr($_REQUEST['q']);
 	    $post_type = $_REQUEST['post_type'];
 	    $field_id = $_REQUEST['mu_meta_post_selector_field_id'];
 

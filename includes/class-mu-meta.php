@@ -57,7 +57,7 @@ class Mu_Meta {
 	 */
 	protected $version;
 
-	protected $settings;
+	private $settings = array();
 
 	/**
 	 * Define the core functionality of the plugin.
@@ -211,6 +211,7 @@ class Mu_Meta {
 		/**
 		 * Form fields
 		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-user-selector.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-post-selector.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-text.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mu-meta-wp-editor.php';
@@ -251,9 +252,11 @@ class Mu_Meta {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
 		$this->loader->add_action('wp_ajax_mu_meta_post_selector_lookup', $plugin_admin,  'post_lookup');
+		$this->loader->add_action('wp_ajax_mu_meta_user_selector_lookup', $plugin_admin,  'user_lookup');
+
 		$this->loader->add_action('save_post', $plugin_admin,  'post_save');
 
-		$this->loader->add_action('admin_init', $plugin_admin, 'demo');
+		$this->loader->add_action('admin_init', $plugin_admin, 'demo', 99999);
 		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'demo_add_meta_box');
 	}
 
