@@ -1,5 +1,16 @@
 # Mu Meta
+用於建立後台設定用元件 (metaboxes)
 
+## Features
+* 支援元件：
+    * text
+    * date
+    * editor
+    * tabs
+    * post selector
+    * user selector
+
+## Usage
 * 以 set_mu_meta($settings) 建立 metaboxes
 * 因為要註冊 ajax functions 和 enqueue 一些 js，set_mu_meta 不可太晚才被執行，建議在 admin_init, priority 99999 之前，因為 99999 會初始化 mu meta 各元件：
 ```
